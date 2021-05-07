@@ -41,6 +41,38 @@ install_banner() {
 	printf "${bblue} [+] Installing $1 ${reset}\n\n"
 }
 
+version=go1.15.10
+eval type -P go $DEBUG_STD || { golang_installed=false; }
+printf "${bblue} Running: Installing/Updating Golang ${reset}\n\n"
+if [[ $(eval type go $DEBUG_ERROR | grep -o 'go is') == "go is" ]] && [ "$version" = $(go version | cut -d " " -f3) ]
+    then
+        printf "${bgreen} Golang is already installed and updated ${reset}\n\n"
+    else
+        eval $SUDO rm -rf /usr/local/go $DEBUG_STD
+        if [ "True" = "$IS_ARM" ]; then
+            eval wget https://dl.google.com/go/${version}.linux-armv6l.tar.gz $DEBUG_STD
+            eval $SUDO tar -C /usr/local -xzf ${version}.linux-armv6l.tar.gz $DEBUG_STD
+        else
+            eval wget https://dl.google.com/go/${version}.linux-amd64.tar.gz $DEBUG_STD
+            eval $SUDO tar -C /usr/local -xzf ${version}.linux-amd64.tar.gz $DEBUG_STD
+        fi
+        eval $SUDO cp /usr/local/go/bin/go /usr/bin
+        rm -rf go$LATEST_GO*
+        export GOROOT=/usr/local/go
+        export GOPATH=$HOME/go
+        export PATH=$GOPATH/bin:$GOROOT/bin:$HOME/.local/bin:$PATH
+cat << EOF >> ~/${profile_shell}
+# Golang vars
+export GOROOT=/usr/local/go
+export GOPATH=\$HOME/go
+export PATH=\$GOPATH/bin:\$GOROOT/bin:\$HOME/.local/bin:\$PATH
+EOF
+
+fi
+
+[ -n "$GOPATH" ] || { printf "${bred} GOPATH env var not detected, add Golang env vars to your \$HOME/.bashrc or \$HOME/.zshrc:\n\n export GOROOT=/usr/local/go\n export GOPATH=\$HOME/go\n export PATH=\$GOPATH/bin:\$GOROOT/bin:\$PATH\n\n"; exit 1; }
+[ -n "$GOROOT" ] || { printf "${bred} GOROOT env var not detected, add Golang env vars to your \$HOME/.bashrc or \$HOME/.zshrc:\n\n export GOROOT=/usr/local/go\n export GOPATH=\$HOME/go\n export PATH=\$GOPATH/bin:\$GOROOT/bin:\$PATH\n\n"; exit 1; }
+
 
 declare -A gotools
 gotools["gf"]="go get -v github.com/tomnomnom/gf"
@@ -188,6 +220,10 @@ setup_dir_and_files(){
 	mkdir -p $INSTALLATION_PATH/signature/ 2>/dev/null
 	mkdir -p $INSTALLATION_PATH/nmap-stuff/ 2>/dev/null
 	mkdir -p $TOOLS_PATH/nmap-stuff/ 2>/dev/null
+	mkdir -p ~/.gf
+	mkdir -p ~/.config/notify/
+	mkdir -p ~/.config/amass/
+	mkdir -p ~/.config/nuclei/
 }
 
 download_wordlist(){
@@ -314,10 +350,10 @@ install_banner "DNScewl"
 eval wget -N -c https://github.com/codingo/DNSCewl/raw/master/DNScewl $DEBUG_STD
 eval $SUDO mv DNScewl /usr/local/bin/DNScewl
 
+setup_dir_and_files
 install_phantomjs
 install_apt
 install_python_tools
-setup_dir_and_files
 download_wordlist
 download_signatures
 download_other_stuff
