@@ -51,10 +51,10 @@ go_installer(){
 		else
 			eval $SUDO rm -rf /usr/local/go $DEBUG_STD
 			if [ "True" = "$IS_ARM" ]; then
-				eval wget https://dl.google.com/go/${version}.linux-armv6l.tar.gz $DEBUG_STD
+				eval wget https://dl.google.com/go/${version}.linux-armv6l.tar.gz --no-check-certificate $DEBUG_STD
 				eval $SUDO tar -C /usr/local -xzf ${version}.linux-armv6l.tar.gz $DEBUG_STD
 			else
-				eval wget https://dl.google.com/go/${version}.linux-amd64.tar.gz $DEBUG_STD
+				eval wget https://dl.google.com/go/${version}.linux-amd64.tar.gz --no-check-certificate $DEBUG_STD
 				eval $SUDO tar -C /usr/local -xzf ${version}.linux-amd64.tar.gz $DEBUG_STD
 			fi
 			eval $SUDO cp /usr/local/go/bin/go /usr/bin
@@ -310,7 +310,6 @@ download_other_stuff(){
 
 go_pkg_installer(){
 	## Go PKG installer
-	install_banner "Installing Go tools"
 	printf "${bblue} Running: Installing Golang tools (${#gotools[@]})${reset}\n\n"
 	go_step=0
 	for gotool in "${!gotools[@]}"; do
@@ -331,7 +330,7 @@ go_pkg_installer(){
 
 repo_installer(){
 	# Standard repos installation
-	install_banner "installing tools from github repos"
+	printf "${bblue} Running: Installing tools from github (${#repos[@]})${reset}\n\n"
 	repos_step=0
 	for repo in "${!repos[@]}"; do
 		repos_step=$((repos_step + 1))
@@ -359,13 +358,27 @@ repo_installer(){
 	done
 }
 
-go_installer
+start=`date +%s`
 setup_dir_and_files
+install_apt
+go_installer
 go_pkg_installer
 repo_installer
 install_phantomjs
-install_apt
 install_python_tools
 download_wordlist
 download_signatures
 download_other_stuff
+end=`date +%s`
+
+dt=$(echo "$end - $start" | bc)
+dd=$(echo "$dt/86400" | bc)
+dt2=$(echo "$dt-86400*$dd" | bc)
+dh=$(echo "$dt2/3600" | bc)
+dt3=$(echo "$dt2-3600*$dh" | bc)
+dm=$(echo "$dt3/60" | bc)
+ds=$(echo "$dt3-60*$dm" | bc)
+
+printf "${green} Installation completed!"
+LC_NUMERIC=C printf "Total runtime: %d:%02d:%02d:%02.4f\n" $dd $dh $dm $ds
+
