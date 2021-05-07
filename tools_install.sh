@@ -204,11 +204,11 @@ install_phantomjs(){
 install_apt(){
 	install_banner "Installing apt packages"
     eval $SUDO apt update -y $DEBUG_STD
-	eval $SUDO apt-get update -qq
-    eval $SUDO apt-get install chrpath libxft-dev -y -qq
-    eval $SUDO apt-get install libfreetype6 libfreetype6-dev -y -qq
-    eval $SUDO apt-get install libfontconfig1 libfontconfig1-dev -y -qq
-	eval $SUDO apt install pigz -y -qq
+	eval $SUDO apt-get update -qq $DEBUG_STD
+    eval $SUDO apt-get install chrpath libxft-dev -y -qq $DEBUG_STD
+    eval $SUDO apt-get install libfreetype6 libfreetype6-dev -y -qq $DEBUG_STD
+    eval $SUDO apt-get install libfontconfig1 libfontconfig1-dev -y -qq $DEBUG_STD
+	eval $SUDO apt install pigz -y -qq $DEBUG_STD
 	
 	eval $SUDO apt install -y libpcap-dev $DEBUG_STD
     eval $SUDO apt install chromium-browser -y $DEBUG_STD
