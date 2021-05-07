@@ -1,13 +1,4 @@
 #!/usr/bin/env bash
-# TERM COLORS
-bred='\033[1;31m'
-bblue='\033[1;34m'
-bgreen='\033[1;32m'
-yellow='\033[0;33m'
-red='\033[0;31m'
-blue='\033[0;34m'
-green='\033[0;32m'
-reset='\033[0m'
 
 echo "$(tput setaf  1)'
     ____                        ____  ____                    
@@ -24,6 +15,18 @@ echo "$(tput setaf  1)'
                                                               
 
 $(tput sgr0)"
+
+
+# TERM COLORS
+bred='\033[1;31m'
+bblue='\033[1;34m'
+bgreen='\033[1;32m'
+yellow='\033[0;33m'
+red='\033[0;31m'
+blue='\033[0;34m'
+green='\033[0;32m'
+reset='\033[0m'
+
 # File descriptors
 DEBUG_STD="&>/dev/null"
 DEBUG_ERROR="2>/dev/null"
@@ -53,7 +56,7 @@ setup_swap_file() {
 }
 
 install_banner() {
-	printf "${bblue} [+] Installing $1 ${reset}\n\n"
+	printf "${bblue} [+] $1 ${reset}\n\n"
 }
 
 go_installer(){
@@ -194,11 +197,12 @@ install_phantomjs(){
 		eval $SUDO mv $PHANTOM_JS /usr/local/share
 		eval $SUDO ln -sf /usr/local/share/$PHANTOM_JS/bin/phantomjs /usr/local/bin
 	else 
-		printf "${bgreen} [+] Phantomjs Already installed!  ${reset}"
+		printf "${bgreen} [+] Phantomjs Already installed!  ${reset}\n"
 	fi
 }
 
 install_apt(){
+	install_banner "Installing apt packages"
     eval $SUDO apt update -y $DEBUG_STD
 	eval $SUDO apt-get update -qq
     eval $SUDO apt-get install chrpath libxft-dev -y -qq
@@ -227,6 +231,7 @@ install_python_tools(){
 }
 
 setup_dir_and_files(){
+	install_banner "Setup directories" 
 	mkdir -p $TOOLS_PATH
 	mkdir -p $INSTALLATION_PATH/wordlists/ 2>/dev/null
 	mkdir -p $INSTALLATION_PATH/wordlists/dns/ 2>/dev/null
@@ -242,6 +247,7 @@ setup_dir_and_files(){
 }
 
 download_wordlist(){
+	install_banner "Downloading wordlist"
 
 	[[ -f $INSTALLATION_PATH/wordlists/dns/all.txt ]] || wget -q -O $INSTALLATION_PATH/wordlists/dns/all.txt https://gist.githubusercontent.com/jhaddix/86a06c5dc309d08580a018c66354a056/raw/96f4e51d96b2203f19f6381c8c545b278eaa0837/all.txt
 
@@ -279,6 +285,7 @@ download_wordlist(){
 }
 
 download_signatures(){
+	install_banner "Downloading signatures"
 	[[ -f $INSTALLATION_PATH/signature/providers-data.csv ]] || wget -q -O $INSTALLATION_PATH/providers-data.csv https://raw.githubusercontent.com/anshumanbh/tko-subs/master/providers-data.csv
 
 	[[ -f $INSTALLATION_PATH/signature/fingerprints.json ]] || wget -q -O $INSTALLATION_PATH/fingerprints.json https://raw.githubusercontent.com/haccer/subjack/master/fingerprints.json
@@ -291,6 +298,7 @@ download_signatures(){
 }
 
 download_other_stuff(){
+	install_banner "Downloading other stuff"
 	[[ -f $INSTALLATION_PATH/signature/apps.json ]] || wget -q -O $INSTALLATION_PATH/apps.json https://raw.githubusercontent.com/AliasIO/Wappalyzer/master/src/apps.json
 
 	# Nmap stuff
@@ -381,9 +389,9 @@ go_pkg_installer
 repo_installer
 install_phantomjs
 install_python_tools
-download_wordlist
 download_signatures
 download_other_stuff
+download_wordlist
 end=`date +%s`
 
 dt=$(echo "$end - $start" | bc)
@@ -394,6 +402,6 @@ dt3=$(echo "$dt2-3600*$dh" | bc)
 dm=$(echo "$dt3/60" | bc)
 ds=$(echo "$dt3-60*$dm" | bc)
 
-printf "${green} Installation completed!"
+printf "${green} Installation completed!\n"
 LC_NUMERIC=C printf "Total runtime: %d:%02d:%02d:%02.4f\n" $dd $dh $dm $ds
 
