@@ -41,38 +41,39 @@ install_banner() {
 	printf "${bblue} [+] Installing $1 ${reset}\n\n"
 }
 
-version=go1.15.10
-eval type -P go $DEBUG_STD || { golang_installed=false; }
-printf "${bblue} Running: Installing/Updating Golang ${reset}\n\n"
-if [[ $(eval type go $DEBUG_ERROR | grep -o 'go is') == "go is" ]] && [ "$version" = $(go version | cut -d " " -f3) ]
-    then
-        printf "${bgreen} Golang is already installed and updated ${reset}\n\n"
-    else
-        eval $SUDO rm -rf /usr/local/go $DEBUG_STD
-        if [ "True" = "$IS_ARM" ]; then
-            eval wget https://dl.google.com/go/${version}.linux-armv6l.tar.gz $DEBUG_STD
-            eval $SUDO tar -C /usr/local -xzf ${version}.linux-armv6l.tar.gz $DEBUG_STD
-        else
-            eval wget https://dl.google.com/go/${version}.linux-amd64.tar.gz $DEBUG_STD
-            eval $SUDO tar -C /usr/local -xzf ${version}.linux-amd64.tar.gz $DEBUG_STD
-        fi
-        eval $SUDO cp /usr/local/go/bin/go /usr/bin
-        rm -rf go$LATEST_GO*
-        export GOROOT=/usr/local/go
-        export GOPATH=$HOME/go
-        export PATH=$GOPATH/bin:$GOROOT/bin:$HOME/.local/bin:$PATH
-cat << EOF >> ~/${profile_shell}
-# Golang vars
-export GOROOT=/usr/local/go
-export GOPATH=\$HOME/go
-export PATH=\$GOPATH/bin:\$GOROOT/bin:\$HOME/.local/bin:\$PATH
+go_installer(){
+	version=go1.15.10
+	eval type -P go $DEBUG_STD || { golang_installed=false; }
+	printf "${bblue} Running: Installing/Updating Golang ${reset}\n\n"
+	if [[ $(eval type go $DEBUG_ERROR | grep -o 'go is') == "go is" ]] && [ "$version" = $(go version | cut -d " " -f3) ]
+		then
+			printf "${bgreen} Golang is already installed and updated ${reset}\n\n"
+		else
+			eval $SUDO rm -rf /usr/local/go $DEBUG_STD
+			if [ "True" = "$IS_ARM" ]; then
+				eval wget https://dl.google.com/go/${version}.linux-armv6l.tar.gz $DEBUG_STD
+				eval $SUDO tar -C /usr/local -xzf ${version}.linux-armv6l.tar.gz $DEBUG_STD
+			else
+				eval wget https://dl.google.com/go/${version}.linux-amd64.tar.gz $DEBUG_STD
+				eval $SUDO tar -C /usr/local -xzf ${version}.linux-amd64.tar.gz $DEBUG_STD
+			fi
+			eval $SUDO cp /usr/local/go/bin/go /usr/bin
+			rm -rf go$LATEST_GO*
+			export GOROOT=/usr/local/go
+			export GOPATH=$HOME/go
+			export PATH=$GOPATH/bin:$GOROOT/bin:$HOME/.local/bin:$PATH
+	cat << EOF >> ~/${profile_shell}
+	# Golang vars
+	export GOROOT=/usr/local/go
+	export GOPATH=\$HOME/go
+	export PATH=\$GOPATH/bin:\$GOROOT/bin:\$HOME/.local/bin:\$PATH
 EOF
 
-fi
+	fi
 
-[ -n "$GOPATH" ] || { printf "${bred} GOPATH env var not detected, add Golang env vars to your \$HOME/.bashrc or \$HOME/.zshrc:\n\n export GOROOT=/usr/local/go\n export GOPATH=\$HOME/go\n export PATH=\$GOPATH/bin:\$GOROOT/bin:\$PATH\n\n"; exit 1; }
-[ -n "$GOROOT" ] || { printf "${bred} GOROOT env var not detected, add Golang env vars to your \$HOME/.bashrc or \$HOME/.zshrc:\n\n export GOROOT=/usr/local/go\n export GOPATH=\$HOME/go\n export PATH=\$GOPATH/bin:\$GOROOT/bin:\$PATH\n\n"; exit 1; }
-
+	[ -n "$GOPATH" ] || { printf "${bred} GOPATH env var not detected, add Golang env vars to your \$HOME/.bashrc or \$HOME/.zshrc:\n\n export GOROOT=/usr/local/go\n export GOPATH=\$HOME/go\n export PATH=\$GOPATH/bin:\$GOROOT/bin:\$PATH\n\n"; exit 1; }
+	[ -n "$GOROOT" ] || { printf "${bred} GOROOT env var not detected, add Golang env vars to your \$HOME/.bashrc or \$HOME/.zshrc:\n\n export GOROOT=/usr/local/go\n export GOPATH=\$HOME/go\n export PATH=\$GOPATH/bin:\$GOROOT/bin:\$PATH\n\n"; exit 1; }
+}
 
 declare -A gotools
 gotools["gf"]="go get -v github.com/tomnomnom/gf"
@@ -108,7 +109,7 @@ gotools["subzy"]="go get -u -v github.com/lukasikic/subzy; go install -v github.
 gotools["goaltdns"]="go get github.com/subfinder/goaltdns"
 gotools["filter-resolved"]="go get github.com/tomnomnom/hacks/filter-resolved"
 gotools["metabigor"]="GO111MODULE=on go get github.com/j3ssie/metabigor"
-gotools["just-resolved"]="github.com/j3ssie/go-auxs/just-resolved"
+gotools["just-resolved"]="go get github.com/j3ssie/go-auxs/just-resolved"
 gotools["httprobe"]="go get -u github.com/tomnomnom/httprobe"
 gotools["meg"]="go get -u github.com/tomnomnom/meg"
 gotools["naabu"]="GO111MODULE=on go get -v github.com/projectdiscovery/naabu/v2/cmd/naabu"
@@ -117,7 +118,7 @@ gotools["dnsprobe"]="GO111MODULE=on go get -v github.com/projectdiscovery/dnspro
 gotools["subjack"]="go get github.com/haccer/subjack"
 gotools["shhgit"]="go get github.com/eth0izzle/shhgit"
 gotools["webanalyze"]="go get -v github.com/rverton/webanalyze/..."
-gotools["gitleaks"]="go get github.com/zricethezav/gitleaks/v4"
+gotools["gitleaks"]="GO111MODULE=on go get github.com/zricethezav/gitleaks/v7"
 
 declare -A repos
 repos["degoogle_hunter"]="six2dez/degoogle_hunter"
@@ -159,44 +160,43 @@ repos["dnsgen"]="ProjectAnte/dnsgen"
 repos["dnsgen"]="ProjectAnte/dnsgen"
 
 
-
-
 install_phantomjs(){
 	PHANTOM_VERSION="phantomjs-2.1.1"
 	if [ ! -n "$(command -v phantomjs)" ]; then
-    printf "${bgreen} [+] Installing Phantomjs ${reset}"
-    ARCH=$(uname -m)
+		printf "${bgreen} [+] Installing Phantomjs ${reset}"
+		ARCH=$(uname -m)
 
-    if ! [ $ARCH = "x86_64" ]; then
-        $ARCH="i686"
-    fi
+		if ! [ $ARCH = "x86_64" ]; then
+			$ARCH="i686"
+		fi
+		
+		PHANTOM_JS="$PHANTOM_VERSION-linux-$ARCH"
+		cd ~
+		wget -q https://bitbucket.org/ariya/phantomjs/downloads/$PHANTOM_JS.tar.bz2
+		eval $SUDO tar -xjf $PHANTOM_JS.tar.bz2
+		rm $PHANTOM_JS.tar.bz2
 
-    PHANTOM_JS="$PHANTOM_VERSION-linux-$ARCH"
-
-    eval $SUDO apt-get update -qq
-    eval $SUDO apt-get install build-essential chrpath libssl-dev libxft-dev -y -qq
-    eval $SUDO apt-get install libfreetype6 libfreetype6-dev -y -qq
-    eval $SUDO apt-get install libfontconfig1 libfontconfig1-dev -y -qq
-	eval $SUDO apt install jq pigz -y -qq
-    cd ~
-    wget -q https://bitbucket.org/ariya/phantomjs/downloads/$PHANTOM_JS.tar.bz2
-    eval $SUDO tar -xjf $PHANTOM_JS.tar.bz2
-	rm $PHANTOM_JS.tar.bz2
-
-    eval $SUDO mv $PHANTOM_JS /usr/local/share
-    eval $SUDO ln -sf /usr/local/share/$PHANTOM_JS/bin/phantomjs /usr/local/bin
-else 
-    printf "${bgreen} [+] Phantomjs Already installed!  ${reset}"
-fi
+		eval $SUDO mv $PHANTOM_JS /usr/local/share
+		eval $SUDO ln -sf /usr/local/share/$PHANTOM_JS/bin/phantomjs /usr/local/bin
+	else 
+		printf "${bgreen} [+] Phantomjs Already installed!  ${reset}"
+	fi
 }
 
 install_apt(){
     eval $SUDO apt update -y $DEBUG_STD
+	eval $SUDO apt-get update -qq
+    eval $SUDO apt-get install chrpath libxft-dev -y -qq
+    eval $SUDO apt-get install libfreetype6 libfreetype6-dev -y -qq
+    eval $SUDO apt-get install libfontconfig1 libfontconfig1-dev -y -qq
+	eval $SUDO apt install pigz -y -qq
+	
+	eval $SUDO apt install -y libpcap-dev $DEBUG_STD
     eval $SUDO apt install chromium-browser -y $DEBUG_STD
     eval $SUDO apt install chromium -y $DEBUG_STD
     eval $SUDO apt install python3 python3-pip ruby git curl libpcap-dev wget python3-dev python3-dnspython pv dnsutils build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev nmap masscan jq python3-shodan apt-transport-https lynx tor medusa csvkit ripgrep unzip xsltproc httpie -y $DEBUG_STD
     eval $SUDO systemctl enable tor $DEBUG_STD
-	eval $SUDO apt install python-dnspython awscli 
+	eval $SUDO apt install python-dnspython awscli -y $DEBUG_STD
 	
 }
 
@@ -292,65 +292,77 @@ download_other_stuff(){
 
 	[[ -f $TOOLS_PATH/nmap-stuff/nmaptocsv.py ]] || wget -q -O $TOOLS_PATH/nmap-stuff/nmaptocsv.py https://raw.githubusercontent.com/maaaaz/nmaptocsv/master/nmaptocsv.py
 
+	cd ~/tools
+	## Special installation
+	install_banner "findomain"
+	eval wget -N -c https://github.com/Findomain/Findomain/releases/latest/download/findomain-linux $DEBUG_STD
+	eval $SUDO mv findomain-linux /usr/local/bin/findomain
+
+	install_banner "gowitness"
+	eval wget -N -c https://github.com/sensepost/gowitness/releases/download/2.3.4/gowitness-2.3.4-linux-amd64 $DEBUG_STD
+	eval $SUDO mv gowitness-2.3.4-linux-amd64 /usr/local/bin/gowitness
+
+	install_banner "DNScewl"
+	eval wget -N -c https://github.com/codingo/DNSCewl/raw/master/DNScewl $DEBUG_STD
+	eval $SUDO mv DNScewl /usr/local/bin/DNScewl
 
 }
 
-## Go PKG installer
-printf "${bblue} Running: Installing Golang tools (${#gotools[@]})${reset}\n\n"
-go_step=0
-for gotool in "${!gotools[@]}"; do
-    go_step=$((go_step + 1))
-    eval type -P $gotool $DEBUG_STD || { eval ${gotools[$gotool]} $DEBUG_STD; }
-    exit_status=$?
-    if [ $exit_status -eq 0 ]
-    then
-        printf "${yellow} $gotool installed (${go_step}/${#gotools[@]})${reset}\n"
-    else
-        printf "${red} Unable to install $gotool, try manually (${go_step}/${#gotools[@]})${reset}\n"
-    fi
-done
+go_pkg_installer(){
+	## Go PKG installer
+	install_banner "Installing Go tools"
+	printf "${bblue} Running: Installing Golang tools (${#gotools[@]})${reset}\n\n"
+	go_step=0
+	for gotool in "${!gotools[@]}"; do
+		go_step=$((go_step + 1))
+		printf "${green} [+] Installing $gotool (${go_step}/${#gotools[@]})${reset}"
+		eval type -P $gotool $DEBUG_STD || { eval ${gotools[$gotool]} $DEBUG_STD; }
+		exit_status=$?
+		if [ $exit_status -eq 0 ]
+		then
+			printf "${green} \xE2\x9C\x94 ${reset}\n"
+		else
+			printf "${red} X ${yellow}Unable to install, try manually ${reset}\n"
+		fi
+	done
 
-# Standard repos installation
-repos_step=0
-for repo in "${!repos[@]}"; do
-    repos_step=$((repos_step + 1))
-    eval cd $dir/$repo $DEBUG_STD || { eval git clone https://github.com/${repos[$repo]} $dir/$repo $DEBUG_STD && cd $dir/$repo; }
-    eval git pull $DEBUG_STD
-    exit_status=$?
-    if [ $exit_status -eq 0 ]
-    then
-        printf "${yellow} $repo installed (${repos_step}/${#repos[@]})${reset}\n"
-    else
-        printf "${red} Unable to install $repo, try manually (${repos_step}/${#repos[@]})${reset}\n"
-    fi
-    if [ -s "setup.py" ]; then
-        eval $SUDO python3 setup.py install $DEBUG_STD
-    fi
-    if [ "massdns" = "$repo" ]; then
-            eval make $DEBUG_STD && strip -s bin/massdns && eval $SUDO cp bin/massdns /usr/bin/ $DEBUG_ERROR
-    elif [ "gf" = "$repo" ]; then
-            eval cp -r examples ~/.gf $DEBUG_ERROR
-    elif [ "Gf-Patterns" = "$repo" ]; then
-            eval mv *.json ~/.gf $DEBUG_ERROR
-    fi
-    cd $dir
-done
+	
+}
 
-cd ~/tools
-## Special installation
-install_banner "findomain"
-eval wget -N -c https://github.com/Findomain/Findomain/releases/latest/download/findomain-linux $DEBUG_STD
-eval $SUDO mv findomain-linux /usr/local/bin/findomain
+repo_installer(){
+	# Standard repos installation
+	install_banner "installing tools from github repos"
+	repos_step=0
+	for repo in "${!repos[@]}"; do
+		repos_step=$((repos_step + 1))
+		printf "${green} [+] Installing $repo (${repos_step}/${#repos[@]})${reset}"
+		eval cd $TOOLS_PATH/$repo $DEBUG_STD || { eval git clone https://github.com/${repos[$repo]} $TOOLS_PATH/$repo $DEBUG_STD && cd $TOOLS_PATH/$repo; }
+		eval git pull $DEBUG_STD
+		exit_status=$?
+		if [ $exit_status -eq 0 ]
+		then
+			printf "${green} \xE2\x9C\x94 ${reset}\n"
+		else
+			printf "${red} X ${yellow}Unable to install, try manually ${reset}\n"
+		fi
+		if [ -s "setup.py" ]; then
+			eval $SUDO python3 setup.py install $DEBUG_STD
+		fi
+		if [ "massdns" = "$repo" ]; then
+				eval make $DEBUG_STD && strip -s bin/massdns && eval $SUDO cp bin/massdns /usr/bin/ $DEBUG_ERROR
+		elif [ "gf" = "$repo" ]; then
+				eval cp -r examples ~/.gf $DEBUG_ERROR
+		elif [ "Gf-Patterns" = "$repo" ]; then
+				eval mv *.json ~/.gf $DEBUG_ERROR
+		fi
+		cd $TOOLS_PATH
+	done
+}
 
-install_banner "gowitness"
-eval wget -N -c https://github.com/sensepost/gowitness/releases/download/2.3.4/gowitness-2.3.4-linux-amd64 $DEBUG_STD
-eval $SUDO mv gowitness-2.3.4-linux-amd64 /usr/local/bin/gowitness
-
-install_banner "DNScewl"
-eval wget -N -c https://github.com/codingo/DNSCewl/raw/master/DNScewl $DEBUG_STD
-eval $SUDO mv DNScewl /usr/local/bin/DNScewl
-
+go_installer
 setup_dir_and_files
+go_pkg_installer
+repo_installer
 install_phantomjs
 install_apt
 install_python_tools
